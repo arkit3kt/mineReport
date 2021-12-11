@@ -1,2 +1,4 @@
 pandas==1.3.4
 requests==2.26.0
+pysqlite3==0.4.6
+sqlalchemy==1.4.28
