@@ -11,11 +11,16 @@ class Report:
     def __init__(self):
         self.base_url = "https://eth.2miners.com"
         self.base_url_cc = "https://min-api.cryptocompare.com/data/v2/histoday"
+        self.base_url_hive = "https://api2.hiveos.farm/api/v2"
         self.ts = datetime.timezone.utc
         self.date_time = datetime.datetime.now(self.ts)
         self.output_path = "reports"
         self.pub_key = ""
         self.crypto_compare_key = ""
+        self.hive_key = ""
+        self.hive_farm_id = ""
+        self.hive_headers = {"Authorization": f"Bearer {self.hive_key}"}
+        self.electric = 13 # int(cost per kwh) | 13 = 13 cents
 
     @property
     def getRewards(self):
@@ -28,6 +33,10 @@ class Report:
     @property
     def getAccountData(self):
         return requests.get(f"{self.base_url}/api/accounts/{self.pub_key}").json()
+
+    @property
+    def getHiveStats(self):
+        return requests.get(f"{self.base_url_hive}/farms/{self.hive_farm_id}/stats", headers=self.hive_headers).json()
 
     def getPriceData(self, ticker, limit):
         return requests.get(f"{self.base_url_cc}?fsym={ticker}&tsym=USD&limit={limit}&toTs=1639550873&api_key={self.crypto_compare_key}").json()['Data']['Data']
