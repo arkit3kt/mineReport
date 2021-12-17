@@ -52,6 +52,11 @@ class Report:
         grouped['earned'] = grouped['reward'] * grouped['price']
         grouped.to_csv(f"{self.output_path}/report-{self.date_time}.csv")
 
+    def powerConversion(self, wattage):
+        kwh = wattage * 24 / 1000 # 24 hrs
+        cents = 100
+        return kwh * self.electric / cents
+
     def extract(self):
         check_rewards = session.query(Rewards).all()
 
