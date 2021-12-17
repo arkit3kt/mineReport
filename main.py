@@ -43,25 +43,51 @@ class Report:
 
 
     def generateCSV(self, data):
+        # gather all rewards data
         df = pd.json_normalize(data)
+
+        # convert timestamps to date format YYYY-MM-DD
         df['date'] = pd.to_datetime(df['timestamp'], unit='s').dt.date
+
+        # group on date
         grouped = df.groupby('date', as_index=False)['reward'].sum()
+
+        # formats the int64 from 2miners to eth decimal value
+        # TODO: handle this decimal conversion better
         grouped['reward'] = grouped['reward'].apply(lambda x: float('.{0:0>9}'.format(x)))
-        #grouped['reward'].
-        length = len(df['timestamp'])
 
-        """floor = np.floor(df['timestamp'])
-        ceiling = np.ceil(df['timestamp'])"""
-        grouped['timestamp'] = [df['timestamp'][length-1], df['timestamp'][0]]
+        # get num of rows from original rewards data
+        num_rows = len(df['timestamp'])
 
+        # get floor and ceiling timestamps for bi-daily reporting
+        grouped['timestamp'] = [df['timestamp'][num_rows-1], df['timestamp'][0]]
+
+        # get num of rows from grouped data
         num_rows = len(grouped.index) - 1
+
+        # get crypto prices
         price_data = self.getPriceData("ETH", num_rows)
+
+        # use close price for reporting
         prices = [x['close'] for x in price_data]
         grouped['price'] = prices
+
+        #calculate earned total for period
         grouped['earned'] = grouped['reward'] * grouped['price']
+
+        # electricity
+        watts = self.getHiveStats['stats']['power_draw']
+        grouped['watts'] = watts
+        grouped['power_cost'] = self.powerConversion(watts)
+
+        # aggregate totals
+        grouped.loc["Total"] = grouped.agg({'reward': np.sum, 'earned':np.sum, 'power_cost':np.sum})
+
+        # output
         grouped.to_csv(f"{self.output_path}/report-{self.date_time}.csv")
 
     def powerConversion(self, wattage):
+        # converts a given wattage to daily cost
         kwh = wattage * 24 / 1000 # 24 hrs
         cents = 100
         return kwh * self.electric / cents
@@ -109,11 +135,11 @@ class Report:
         print("Printing each row : ")
         for i in check_rewards:
             print(i)
+
 if __name__ == "__main__":
     report = Report()
     #report.generateCSV(json.loads(json.dumps(report.getPayoutData["payments"])))
-    #report.generateCSV(json.loads(json.dumps(report.getAccountData["rewards"])))
-    #data = json.loads(json.dumps(report.getAccountData["rewards"]))
-    #report.extract()
     report.generateCSV(json.loads(json.dumps(report.getAccountData["rewards"])))
+    #report.extract()
+
 
