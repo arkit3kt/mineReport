@@ -18,11 +18,11 @@ class Report:
         self.crypto_compare_key = ""
 
     @property
-    def getRewardsData(self):
-        return requests.get(f"{self.base_url}/endpopint").json()
+    def getRewards(self):
+        return requests.get(f"{self.base_url}/rewards").json()
 
     @property
-    def getPayoutData(self):
+    def getPayments(self):
         return requests.get(f"{self.base_url}/api/payments").json()
 
     @property
